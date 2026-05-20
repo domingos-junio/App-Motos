@@ -1,0 +1,17 @@
+export const colors = {
+  background: '#0D0D0D',
+  surface: '#1A1A1A',
+  surfaceElevated: '#242424',
+  primary: '#E53935',
+  accent: '#FF6D00',
+  textPrimary: '#F5F5F5',
+  textSecondary: '#BDBDBD',
+  textMuted: '#757575',
+  cardBorder: 'rgba(229,57,53,0.15)',
+  cardBorderSubtle: 'rgba(229,57,53,0.12)',
+  error: '#EF5350',
+  success: '#66BB6A',
+  gradientStart: '#E53935' as const,
+  gradientEnd: '#FF6D00' as const,
+  gradient: ['#E53935', '#FF6D00'] as const,
+} as const;
