@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, Modal, ScrollView, Pressable, Platform, Image, 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { WebView } from 'react-native-webview';
 import GradientButton from './GradientButton';
 import { colors } from '../theme/colors';
 import type { Motorcycle } from '../data/motorcycles';
@@ -12,6 +13,13 @@ interface Props {
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const videoUrlsByMotoId: Record<string, string> = {
+  '1': 'https://www.youtube.com/watch?v=eoM76jr81dY',
+  '2': 'https://www.youtube.com/watch?v=YWhY2g7sSGs',
+  '3': 'https://www.youtube.com/watch?v=Lv8jfnqLNo8',
+  '4': 'https://www.youtube.com/watch?v=--5baa8_vOM',
+  '5': 'https://www.youtube.com/watch?v=BLo9ewJ63JU',
+};
 
 interface SpecItemProps {
   icon: string;
@@ -44,6 +52,7 @@ const specStyles = StyleSheet.create({
 
 export default function MotoCard({ moto }: Props) {
   const [detailOpen, setDetailOpen] = useState(false);
+  const [showMotoVideo, setShowMotoVideo] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [modalImageLoaded, setModalImageLoaded] = useState(false);
@@ -54,6 +63,8 @@ export default function MotoCard({ moto }: Props) {
   }));
 
   const hasImage = !!(moto?.imageUrl);
+  const motoVideoUrl = videoUrlsByMotoId[moto?.id ?? ''] ?? '';
+  const hasMotoVideo = motoVideoUrl.length > 0;
 
   return (
     <>
@@ -123,13 +134,23 @@ export default function MotoCard({ moto }: Props) {
         visible={detailOpen}
         animationType="slide"
         transparent
-        onRequestClose={() => setDetailOpen(false)}
+        onRequestClose={() => {
+          setDetailOpen(false);
+          setShowMotoVideo(false);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{moto?.name ?? ''}</Text>
-              <Pressable onPress={() => setDetailOpen(false)} hitSlop={12} accessibilityLabel="Fechar">
+              <Pressable
+                onPress={() => {
+                  setDetailOpen(false);
+                  setShowMotoVideo(false);
+                }}
+                hitSlop={12}
+                accessibilityLabel="Fechar"
+              >
                 <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </Pressable>
             </View>
@@ -160,6 +181,34 @@ export default function MotoCard({ moto }: Props) {
                 )}
               </View>
               <Text style={styles.modalDescription}>{moto?.description ?? ''}</Text>
+              <View style={styles.videoSection}>
+                <Pressable
+                  style={[styles.videoButton, !hasMotoVideo && styles.videoButtonDisabled]}
+                  onPress={() => hasMotoVideo && setShowMotoVideo((prev) => !prev)}
+                  disabled={!hasMotoVideo}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Video da ${moto?.brand ?? 'moto'}`}
+                >
+                  <MaterialCommunityIcons
+                    name={showMotoVideo ? 'close-circle-outline' : 'play-circle-outline'}
+                    size={20}
+                    color={colors.textPrimary}
+                  />
+                  <Text style={styles.videoButtonText}>
+                    {showMotoVideo ? 'Fechar video' : 'Review Completo'}
+                  </Text>
+                </Pressable>
+                {!hasMotoVideo && (
+                  <Text style={styles.videoHint}>
+                    Preencha a URL desta moto em `videoUrlsByMotoId`.
+                  </Text>
+                )}
+                {showMotoVideo && hasMotoVideo && (
+                  <View style={styles.videoContainer}>
+                    <WebView source={{ uri: motoVideoUrl }} allowsFullscreenVideo />
+                  </View>
+                )}
+              </View>
               <View style={styles.modalSpecs}>
                 <SpecItem icon="engine-outline" label="Cilindrada" value={moto?.cilindrada ?? ''} />
                 <SpecItem icon="flash" label="Potência" value={moto?.potencia ?? ''} />
@@ -289,5 +338,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingBottom: 32,
+  },
+  videoSection: {
+    marginBottom: 16,
+  },
+  videoButton: {
+    backgroundColor: colors.cardBorderSubtle,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  videoButtonDisabled: {
+    opacity: 0.55,
+  },
+  videoButtonText: {
+    color: colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  videoHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  videoContainer: {
+    height: 220,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#000',
   },
 });
